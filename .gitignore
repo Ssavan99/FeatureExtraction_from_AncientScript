@@ -165,3 +165,4 @@ data2/
 *.npz
 *.zip
 *.rar
+out/
