@@ -36,21 +36,28 @@ STROKE_FEATURES = ["(", "o", "\\", "||", "X", "^", "v", ">", "|", "/\\"]
 
 
 @functools.lru_cache(maxsize=None)
+def _read_classes(csv: Path) -> tuple[str, ...]:
+    # Cached as a tuple so a caller cannot mutate the shared copy. The order of
+    # this sequence *is* the model's output order, so corrupting it would
+    # silently mislabel every subsequent prediction.
+    return tuple(sorted(set(pd.read_csv(csv)["character"].astype(str))))
+
+
 def modi_classes() -> list[str]:
     """The 47 MODI character names, in model-1 output order."""
-    names = pd.read_csv(FEATURE_LIST_CSV)["character"].astype(str)
-    return sorted(set(names))
+    return list(_read_classes(FEATURE_LIST_CSV))
 
 
-@functools.lru_cache(maxsize=None)
 def combined_classes() -> list[str]:
     """The 80 MODI + Devanagari character names, in model-2 output order."""
-    names = pd.read_csv(FEATURE_LIST_COMBINED_CSV)["character"].astype(str)
-    return sorted(set(names))
+    return list(_read_classes(FEATURE_LIST_COMBINED_CSV))
 
 
 def classes_for(model_id: int) -> list[str]:
-    """Class list for model ``1`` (47 MODI) or ``2`` (80 combined)."""
+    """Class list for model ``1`` (47 MODI) or ``2`` (80 combined).
+
+    Returns a fresh list each call; mutating it does not affect other callers.
+    """
     if model_id == 1:
         return modi_classes()
     if model_id == 2:

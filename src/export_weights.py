@@ -30,11 +30,27 @@ import numpy as np
 from .classes import REPO_ROOT, classes_for
 from .model import INPUT_SIZE, load, load_image
 
-# Layer classes the JavaScript runtime knows how to execute.
+# Layer classes the JavaScript runtime knows how to execute. Anything absent
+# here raises at export time, where it is diagnosable, rather than producing a
+# plan the browser cannot run. Keep this in sync with docs/cnn.js.
 _SUPPORTED = {
     "Conv2D", "BatchNormalization", "MaxPooling2D", "Dropout",
-    "GlobalAveragePooling2D", "Dense", "InputLayer", "Flatten",
+    "GlobalAveragePooling2D", "Dense", "InputLayer",
 }
+
+# Activations docs/cnn.js implements.
+_SUPPORTED_ACTIVATIONS = {"relu", "softmax", "linear"}
+
+
+def _activation_name(layer) -> str:
+    """Activation of ``layer``, rejecting anything the JS runtime lacks."""
+    name = layer.activation.__name__
+    if name not in _SUPPORTED_ACTIVATIONS:
+        raise NotImplementedError(
+            f"layer {layer.name!r} uses activation {name!r}, which docs/cnn.js "
+            f"does not implement (supported: {sorted(_SUPPORTED_ACTIVATIONS)})"
+        )
+    return name
 
 
 def build_plan(model) -> tuple[list[dict], list[np.ndarray]]:
@@ -64,7 +80,7 @@ def build_plan(model) -> tuple[list[dict], list[np.ndarray]]:
             step.update(
                 kernel=add(kernel), bias=add(bias),
                 kernelShape=list(kernel.shape),
-                activation=layer.activation.__name__,
+                activation=_activation_name(layer),
             )
             if layer.padding != "valid" or tuple(layer.strides) != (1, 1):
                 raise NotImplementedError(
@@ -84,7 +100,7 @@ def build_plan(model) -> tuple[list[dict], list[np.ndarray]]:
             step.update(
                 kernel=add(kernel), bias=add(bias),
                 kernelShape=list(kernel.shape),
-                activation=layer.activation.__name__,
+                activation=_activation_name(layer),
             )
         plan.append(step)
 

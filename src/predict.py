@@ -17,6 +17,13 @@ from .classes import classes_for, strokes_for
 from .model import load, load_image
 
 
+def _positive_int(value: str) -> int:
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError(f"must be 1 or greater, got {number}")
+    return number
+
+
 def predict(image_path: str | Path, model_id: int = 1, topk: int = 5):
     """Return ``[(character, probability), ...]`` for the top ``topk`` classes."""
     names = classes_for(model_id)
@@ -32,7 +39,8 @@ def main(argv: list[str] | None = None) -> int:
         "--model", type=int, default=1, choices=(1, 2),
         help="1 = 47-class MODI (default), 2 = 80-class MODI + Devanagari",
     )
-    parser.add_argument("--topk", type=int, default=5, help="how many predictions to show")
+    parser.add_argument("--topk", type=_positive_int, default=5,
+                        help="how many predictions to show (at least 1)")
     args = parser.parse_args(argv)
 
     results = predict(args.image, args.model, args.topk)

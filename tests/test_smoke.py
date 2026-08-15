@@ -116,3 +116,12 @@ def test_featuremaps_render(tmp_path):
 
     out = render(path, layers[0], tmp_path / "maps.png", model_id=1)
     assert out.is_file() and out.stat().st_size > 0
+
+
+def test_class_lists_are_not_shared_between_callers():
+    # The list order is the model's output order, so a caller mutating it must
+    # not be able to corrupt anyone else's copy.
+    first = classes_for(1)
+    first.append("BOGUS")
+    assert "BOGUS" not in classes_for(1)
+    assert len(classes_for(1)) == 47
