@@ -349,6 +349,9 @@ main { display: grid; gap: clamp(1rem, 2.5vw, 1.6rem); }
   overflow: hidden;
 }
 .bar__fill {
+  /* A span defaults to display:inline, on which width and height do not apply -
+     without this the fill renders 0x0 and every bar looks empty. */
+  display: block;
   height: 100%;
   width: 0;
   background: var(--accent);
