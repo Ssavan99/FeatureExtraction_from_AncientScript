@@ -1,27 +1,37 @@
 # SYNC.md — local vs origin
 
-_Last updated: 2026-08-15 (Phase 0 audit)_
+_Last updated: 2026-08-15 (after the work branch was pushed and PR #1 opened)_
 
 Remote: `git@github.com:Ssavan99/FeatureExtraction_from_AncientScript.git` (origin)
 
-## Summary
+## Current state
 
 | Check | Result |
 |---|---|
-| Local branch | `main` @ `1a3cad5` |
-| Tracking | `origin/main` @ `1a3cad5` — **in sync** |
-| Commits ahead of origin | 0 |
-| Commits behind origin | 0 |
-| Other local branches | none |
-| Branches only on GitHub | none |
+| Working branch | `feat/reproducible-pipeline-and-demo` |
+| Tracking | `origin/feat/reproducible-pipeline-and-demo` — **pushed** |
+| `main` | `1a3cad5`, unchanged and in sync with `origin/main` |
+| Open PR | [#1](https://github.com/Ssavan99/FeatureExtraction_from_AncientScript/pull/1) — not merged, by design |
+| CI on the PR | **green** (`pytest -q`, 19 tests, Ubuntu / Python 3.10) |
 | Stashes | none |
 | Tags | none (local or remote) |
-| Untracked files | none |
-| `git fsck --lost-found` | clean — no dangling/unreachable objects |
-| Uncommitted changes | **1 file** — `character_label_classification.ipynb` (+127 / −69) |
-| `.git` size | 7.7 MB |
+| `git fsck --lost-found` | clean |
+| Uncommitted | the `docs/` browser-demo files, pending verification |
 
-An extra read-only remote `ghcheck` also points at the same commit; it is a local convenience remote, not a divergent copy.
+Commits on the branch, oldest first:
+
+```
+5400b62  Repo hygiene: fix broken activation-maximization cell, drop redundant artifacts
+982da55  Make the project runnable and testable from a bare clone
+923f6ef  Address code-review findings
+a540e5c  Rewrite README
+```
+
+An extra read-only remote `ghcheck` also points at `1a3cad5`; it is a local convenience remote, not a divergent copy.
+
+## History for the record — state at the Phase 0 audit
+
+At the start of this work `main` was `1a3cad5`, exactly in sync with origin: nothing ahead, nothing behind, no other branches, no stashes, no tags, no untracked files, `git fsck` clean, `.git` 7.7 MB. The only uncommitted work was `character_label_classification.ipynb` (+127 / −69), which is now committed in `5400b62` with its broken cell fixed.
 
 ## What is pushed
 
