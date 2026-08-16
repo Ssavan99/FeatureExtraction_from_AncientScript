@@ -1,6 +1,6 @@
 # SYNC.md — local vs origin
 
-_Last updated: 2026-08-15 (after the work branch was pushed and PR #1 opened)_
+_Last updated: 2026-08-15 (all phases complete; demo deployed)_
 
 Remote: `git@github.com:Ssavan99/FeatureExtraction_from_AncientScript.git` (origin)
 
@@ -16,7 +16,8 @@ Remote: `git@github.com:Ssavan99/FeatureExtraction_from_AncientScript.git` (orig
 | Stashes | none |
 | Tags | none (local or remote) |
 | `git fsck --lost-found` | clean |
-| Uncommitted | the `docs/` browser-demo files, pending verification |
+| Uncommitted | none |
+| GitHub Pages | **live** — <https://ssavan99.github.io/FeatureExtraction_from_AncientScript/> |
 
 Commits on the branch, oldest first:
 
@@ -25,7 +26,17 @@ Commits on the branch, oldest first:
 982da55  Make the project runnable and testable from a bare clone
 923f6ef  Address code-review findings
 a540e5c  Rewrite README
+11b0454  Update SYNC.md for the pushed branch and open PR
+28c4f8c  Add the in-browser demo (GitHub Pages)
+77b6cb0  Fix invisible prediction bars; retake the README screenshot
+61578d0  Address Phase 4 review: split activation allowlists per layer type
 ```
+
+### Pages configuration — needs one manual change after merge
+
+Pages is currently serving `/docs` from **`feat/reproducible-pipeline-and-demo`**, so the demo is
+live before the PR merges. Once PR #1 is merged, repoint the Pages source at `main` (Settings →
+Pages → Branch), otherwise the site freezes at this branch's state.
 
 An extra read-only remote `ghcheck` also points at `1a3cad5`; it is a local convenience remote, not a divergent copy.
 
