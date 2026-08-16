@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feature Extraction from Ancient Script</title>
+<meta name="description" content="A convolutional neural network that reads handwritten MODI, a historical Marathi script, running entirely in your browser.">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+
+<!-- Loading state, removed once the weights are in memory -->
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="loader__inner">
+    <div class="loader__bar"><span></span></div>
+    <p class="loader__msg mono" id="loader-msg">Loading model</p>
+  </div>
+</div>
+
+<div class="page" id="page" aria-busy="true">
+
+  <header class="masthead">
+    <h1>Feature&nbsp;Extraction from Ancient&nbsp;Script</h1>
+    <p class="pitch">A convolutional neural network that reads handwritten MODI &mdash; a historical Marathi script &mdash; running entirely in your browser.</p>
+  </header>
+
+  <main>
+
+    <!-- ---------------------------------------------------------- 1. Gallery -->
+    <section class="panel" aria-labelledby="gallery-h">
+      <div class="panel__head">
+        <h2 id="gallery-h">Sample glyphs</h2>
+        <p class="panel__note">47 real images from the dataset, at the 32&times;32 resolution the model sees. Pick one.</p>
+      </div>
+      <div class="gallery" id="gallery" role="radiogroup" aria-label="Sample glyphs"></div>
+    </section>
+
+    <!-- ------------------------------------------- 2 + 4. Prediction, occlusion -->
+    <div class="split">
+
+      <section class="panel" aria-labelledby="input-h">
+        <div class="panel__head">
+          <h2 id="input-h">Input</h2>
+          <p class="panel__note" id="input-source">&nbsp;</p>
+        </div>
+
+        <div class="stage">
+          <div class="stage__frame">
+            <canvas id="input-canvas" width="32" height="32" class="pixelated" aria-label="Selected glyph"></canvas>
+            <canvas id="heat-canvas" width="256" height="256" class="heat" aria-hidden="true"></canvas>
+          </div>
+        </div>
+
+        <div class="occl">
+          <button type="button" class="btn" id="occl-btn">Show what the model is looking at</button>
+          <div class="occl__status mono" id="occl-status" role="status" aria-live="polite"></div>
+          <div class="progress" id="occl-progress" hidden><span id="occl-progress-bar"></span></div>
+          <div class="legend" id="occl-legend" hidden>
+            <span class="legend__label mono">less</span>
+            <span class="legend__ramp" aria-hidden="true"></span>
+            <span class="legend__label mono">more important</span>
+          </div>
+          <p class="panel__note occl__explain">
+            An 8&times;8 grey patch slides across the image in 64 positions, one
+            forward pass each. Warmer areas are where hiding those pixels cost the
+            predicted class the most confidence. Read it with some caution: a flat
+            grey square is itself unlike anything in the training data, so even
+            patches over blank paper disturb the prediction a little.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="pred-h">
+        <div class="panel__head">
+          <h2 id="pred-h">Prediction</h2>
+          <p class="panel__note">Top 5 of 80 classes.</p>
+        </div>
+        <ol class="bars" id="bars"></ol>
+        <p class="verdict" id="verdict" role="status" aria-live="polite"></p>
+      </section>
+
+    </div>
+
+    <!-- ------------------------------------------------- 3. Feature explorer -->
+    <section class="panel panel--feature" aria-labelledby="feat-h">
+      <div class="panel__head">
+        <h2 id="feat-h">Feature maps</h2>
+        <p class="panel__note">Every channel each convolution produces for this glyph. Each tile is normalised independently, so bright means &ldquo;strong response relative to this channel&rsquo;s own range&rdquo;. A completely black tile is a channel that stayed silent on this input &mdash; after ReLU, most of these maps are exactly zero.</p>
+      </div>
+
+      <div class="tabs" id="feat-tabs" role="tablist" aria-label="Network layers"></div>
+
+      <p class="feat__caption" id="feat-caption"></p>
+      <p class="feat__meta mono" id="feat-meta"></p>
+
+      <div class="tiles" id="tiles" role="tabpanel" tabindex="0" aria-labelledby="feat-h"></div>
+    </section>
+
+    <!-- ------------------------------------------------------- 5. Draw mode -->
+    <details class="panel panel--draw" id="draw-details">
+      <summary>
+        <span class="summary__title">Draw a glyph yourself</span>
+        <span class="summary__hint">optional</span>
+      </summary>
+
+      <div class="draw">
+        <div class="draw__canvasWrap">
+          <canvas id="ghost-canvas" width="256" height="256" class="draw__ghost pixelated" aria-hidden="true"></canvas>
+          <canvas id="draw-canvas" width="256" height="256" class="draw__pad" aria-label="Drawing area. Trace the ghosted glyph behind."></canvas>
+        </div>
+        <div class="draw__side">
+          <button type="button" class="btn btn--quiet" id="draw-clear">Clear</button>
+          <p class="panel__note">
+            The selected gallery glyph is ghosted behind the pad as a tracing
+            guide. Predictions update as you draw.
+          </p>
+          <p class="caveat">
+            Worth being honest about this: the model was trained on isolated,
+            evenly&nbsp;scanned dataset glyphs. Freehand mouse or finger input has
+            different stroke weight, centring and noise, so it is out of
+            distribution. Expect predictions here to be noticeably worse than the
+            90.2% test accuracy measured on held&#8209;out dataset images.
+          </p>
+        </div>
+      </div>
+    </details>
+
+  </main>
+
+  <footer class="colophon">
+    <p>
+      A ~177k&#8209;parameter CNN over 32&times;32 RGB input, 80 combined MODI and
+      Devanagari classes, 90.2% test accuracy on held&#8209;out dataset images.
+      Inference, feature maps and the occlusion sweep all run in plain JavaScript
+      on this page &mdash; no network calls after load.
+    </p>
+    <!-- Absolute, because when Pages serves the /docs folder the site root IS
+         this folder, so a relative "../" would leave the repo entirely. -->
+    <p><a href="https://github.com/Ssavan99/FeatureExtraction_from_AncientScript">Source, models and write-up on GitHub</a></p>
+  </footer>
+
+</div>
+
+<noscript>
+  <p style="padding:2rem">This demo runs the neural network in your browser, so it needs JavaScript enabled.</p>
+</noscript>
+
+</body>
+</html>
