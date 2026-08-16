@@ -38,17 +38,26 @@ _SUPPORTED = {
     "GlobalAveragePooling2D", "Dense", "InputLayer",
 }
 
-# Activations docs/cnn.js implements.
-_SUPPORTED_ACTIVATIONS = {"relu", "softmax", "linear"}
+# Activations docs/cnn.js implements, per layer type. Its conv2d handles relu
+# and passes everything else through unchanged, so softmax is dense-only.
+_CONV_ACTIVATIONS = {"relu", "linear"}
+_DENSE_ACTIVATIONS = {"relu", "softmax", "linear"}
 
 
-def _activation_name(layer) -> str:
-    """Activation of ``layer``, rejecting anything the JS runtime lacks."""
+def _activation_name(layer, allowed: set[str]) -> str:
+    """Activation of ``layer``, rejecting anything the JS runtime lacks.
+
+    ``allowed`` differs per layer type because docs/cnn.js implements softmax
+    only in ``dense``: its ``conv2d`` branches on relu and otherwise copies
+    straight through, so a softmax convolution would silently emit unnormalised
+    logits instead of probabilities.
+    """
     name = layer.activation.__name__
-    if name not in _SUPPORTED_ACTIVATIONS:
+    if name not in allowed:
         raise NotImplementedError(
             f"layer {layer.name!r} uses activation {name!r}, which docs/cnn.js "
-            f"does not implement (supported: {sorted(_SUPPORTED_ACTIVATIONS)})"
+            f"does not implement for {layer.__class__.__name__} "
+            f"(supported here: {sorted(allowed)})"
         )
     return name
 
@@ -80,7 +89,7 @@ def build_plan(model) -> tuple[list[dict], list[np.ndarray]]:
             step.update(
                 kernel=add(kernel), bias=add(bias),
                 kernelShape=list(kernel.shape),
-                activation=_activation_name(layer),
+                activation=_activation_name(layer, _CONV_ACTIVATIONS),
             )
             if layer.padding != "valid" or tuple(layer.strides) != (1, 1):
                 raise NotImplementedError(
@@ -100,7 +109,7 @@ def build_plan(model) -> tuple[list[dict], list[np.ndarray]]:
             step.update(
                 kernel=add(kernel), bias=add(bias),
                 kernelShape=list(kernel.shape),
-                activation=_activation_name(layer),
+                activation=_activation_name(layer, _DENSE_ACTIVATIONS),
             )
         plan.append(step)
 
