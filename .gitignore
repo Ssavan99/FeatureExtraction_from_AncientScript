@@ -166,3 +166,6 @@ data2/
 *.zip
 *.rar
 out/
+
+# Code knowledge graph outputs
+graphify-out/
